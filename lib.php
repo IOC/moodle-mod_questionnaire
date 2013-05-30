@@ -664,6 +664,8 @@ function questionnaire_print_overview($courses, &$htmlarray) {
     global $DB, $USER, $CFG;
     require_once($CFG->dirroot.'/mod/questionnaire/locallib.php');
 
+    return;
+
     if (empty($courses) || !is_array($courses) || count($courses) == 0) {
         return array();
     }
