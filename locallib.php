@@ -428,9 +428,11 @@ function questionnaire_get_survey_list($courseid=0, $type='') {
 
     if ($courseid == 0) {
         if (isadmin()) {
-            $sql = "SELECT id,name,owner,realm,status " .
-                   "{questionnaire_survey} " .
-                   "ORDER BY realm,name ";
+            $sql = "SELECT s.id,s.name,s.owner,s.realm,s.status,q.id as qid,q.name as qname,c.shortname as course " .
+                   "FROM {questionnaire_survey} s " .
+                   "JOIN {questionnaire} q ON q.sid = s.id " .
+                   "JOIN {course} c ON c.id = s.owner " .
+                   "ORDER BY course,qname ";
             $params = null;
         } else {
             return false;
@@ -438,27 +440,30 @@ function questionnaire_get_survey_list($courseid=0, $type='') {
     } else if (!empty($type)) {
         $castsql = $DB->sql_cast_char2int('s.owner');
         if ($type == 'public') {
-            $sql = "SELECT s.id,s.name,s.owner,s.realm,s.status,s.title,q.id as qid,q.name as qname " .
+            $sql = "SELECT s.id,s.name,s.owner,s.realm,s.status,s.title,q.id as qid,q.name as qname,c.shortname as course " .
                    "FROM {questionnaire} q " .
                    "INNER JOIN {questionnaire_survey} s ON s.id = q.sid AND ".$castsql." = q.course " .
+                   "JOIN {course} c ON c.id = s.owner " .
                    "WHERE realm = ? " .
-                   "ORDER BY realm,name ";
+                   "ORDER BY course,qname ";
             $params = array($type);
             // Any survey owned by the user or typed as 'template' can be copied.
         } else if ($type == 'template') {
-            $sql = "SELECT s.id,s.name,s.owner,s.realm,s.status,s.title,q.id as qid,q.name as qname " .
+            $sql = "SELECT s.id,s.name,s.owner,s.realm,s.status,s.title,q.id as qid,q.name as qname,c.shortname as course " .
                    "FROM {questionnaire} q " .
                    "INNER JOIN {questionnaire_survey} s ON s.id = q.sid AND ".$castsql." = q.course " .
+                   "JOIN {course} c ON c.id = s.owner " .
                    "WHERE (realm = ? OR owner = ?) " .
-                   "ORDER BY realm,name ";
+                   "ORDER BY course,qname ";
             $params = array($type, $courseid);
         }
     } else {
-        $sql = "SELECT s.id,s.name,s.owner,s.realm,s.status,q.id as qid,q.name as qname " .
+        $sql = "SELECT s.id,s.name,s.owner,s.realm,s.status,q.id as qid,q.name as qname,c.shortname as course " .
                "FROM {questionnaire} q " .
                "INNER JOIN {questionnaire_survey} s ON s.id = q.sid " .
+               "JOIN {course} c ON c.id = s.owner " .
                "WHERE owner = ? " .
-               "ORDER BY realm,name ";
+               "ORDER BY course,qname ";
         $params = array($courseid);
     }
     return $DB->get_records_sql($sql, $params);
@@ -500,7 +505,7 @@ function questionnaire_get_survey_select($instance, $courseid=0, $sid=0, $type='
                 $link = new moodle_url("/mod/questionnaire/preview.php?{$args}");
                 $action = new popup_action('click', $link);
                 $label = $OUTPUT->action_link($link, $survey->qname, $action, array('title'=>$survey->title));
-                $surveylist[$type.'-'.$survey->id] = $label;
+                $surveylist[$type.'-'.$survey->id] = s($survey->course).' '.$label;
             }
         }
     }
