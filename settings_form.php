@@ -69,7 +69,7 @@ class questionnaire_settings_form extends moodleform {
         $mform->addElement('header', 'submithdr', get_string('submitoptions', 'questionnaire'));
 
         $mform->addElement('text', 'thanks_page', get_string('url', 'questionnaire'), array('size' => '60'));
-        $mform->setType('thanks_page', PARAM_TEXT);
+        $mform->setType('thanks_page', PARAM_URL);
         $mform->setDefault('thanks_page', $questionnaire->survey->thanks_page);
         $mform->addHelpButton('thanks_page', 'url', 'questionnaire');
 
@@ -218,6 +218,9 @@ class questionnaire_settings_form extends moodleform {
 
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
+        if (!empty($data['thanks_page']) && !preg_match('/^https?:\/\//i', $data['thanks_page'])) {
+            $errors['thanks_page'] = get_string('invalidurl', 'error');
+        }
         return $errors;
     }
 }
