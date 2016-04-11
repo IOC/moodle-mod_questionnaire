@@ -963,6 +963,8 @@ function questionnaire_print_overview($courses, &$htmlarray) {
 
     require_once($CFG->dirroot . '/mod/questionnaire/locallib.php');
 
+    return;
+
     if (!$questionnaires = get_all_instances_in_courses('questionnaire', $courses)) {
         return;
     }
