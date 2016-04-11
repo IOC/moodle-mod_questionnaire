@@ -454,44 +454,49 @@ function questionnaire_get_survey_list($courseid=0, $type='') {
 
     if ($courseid == 0) {
         if (isadmin()) {
-            $sql = "SELECT id,name,courseid,realm,status " .
-                   "{questionnaire_survey} " .
-                   "ORDER BY realm,name ";
+            $sql = "SELECT s.id,s.name,s.courseid,s.realm,s.status,q.id as qid,q.name as qname,c.shortname as course " .
+                   "FROM {questionnaire_survey} s " .
+                   "JOIN {questionnaire} q ON q.sid = s.id " .
+                   "JOIN {course} c ON c.id = s.courseid " .
+                   "ORDER BY course,qname ";
             $params = null;
         } else {
             return false;
         }
     } else {
         if ($type == 'public') {
-            $sql = "SELECT s.id,s.name,s.courseid,s.realm,s.status,s.title,q.id as qid,q.name as qname " .
+            $sql = "SELECT s.id,s.name,s.courseid,s.realm,s.status,s.title,q.id as qid,q.name as qname,c.shortname as course " .
                    "FROM {questionnaire} q " .
                    "INNER JOIN {questionnaire_survey} s ON s.id = q.sid AND s.courseid = q.course " .
+                   "JOIN {course} c ON c.id = s.courseid " .
                    "WHERE realm = ? " .
-                   "ORDER BY realm,name ";
+                   "ORDER BY course,qname ";
             $params = [$type];
         } else if ($type == 'template') {
-            $sql = "SELECT s.id,s.name,s.courseid,s.realm,s.status,s.title,q.id as qid,q.name as qname " .
+            $sql = "SELECT s.id,s.name,s.courseid,s.realm,s.status,s.title,q.id as qid,q.name as qname,c.shortname as course " .
                    "FROM {questionnaire} q " .
                    "INNER JOIN {questionnaire_survey} s ON s.id = q.sid AND s.courseid = q.course " .
+                   "JOIN {course} c ON c.id = s.courseid " .
                    "WHERE (realm = ?) " .
-                   "ORDER BY realm,name ";
+                   "ORDER BY course,qname ";
             $params = [$type];
         } else if ($type == 'private') {
-            $sql = "SELECT s.id,s.name,s.courseid,s.realm,s.status,q.id as qid,q.name as qname " .
+            $sql = "SELECT s.id,s.name,s.courseid,s.realm,s.status,q.id as qid,q.name as qname,c.shortname as course " .
                 "FROM {questionnaire} q " .
                 "INNER JOIN {questionnaire_survey} s ON s.id = q.sid " .
+                "JOIN {course} c ON c.id = s.courseid " .
                 "WHERE s.courseid = ? and realm = ? " .
-                "ORDER BY realm,name ";
+                "ORDER BY course,qname ";
             $params = [$courseid, $type];
-
         } else {
             // Current get_survey_list is called from function questionnaire_reset_userdata so we need to get a
             // complete list of all questionnaires in current course to reset them.
-            $sql = "SELECT s.id,s.name,s.courseid,s.realm,s.status,q.id as qid,q.name as qname " .
+            $sql = "SELECT s.id,s.name,s.courseid,s.realm,s.status,q.id as qid,q.name as qname,c.shortname as course " .
                    "FROM {questionnaire} q " .
                     "INNER JOIN {questionnaire_survey} s ON s.id = q.sid AND s.courseid = q.course " .
+                   "JOIN {course} c ON c.id = s.courseid " .
                    "WHERE s.courseid = ? " .
-                   "ORDER BY realm,name ";
+                   "ORDER BY course,qname ";
             $params = [$courseid];
         }
     }
@@ -527,7 +532,7 @@ function questionnaire_get_survey_select($courseid=0, $type='') {
                 $action = new popup_action('click', $link);
                 $label = $OUTPUT->action_link($link, $survey->qname.' ['.$originalcourse->fullname.']',
                     $action, array('title' => $strpreview));
-                $surveylist[$type.'-'.$survey->id] = $label;
+                $surveylist[$type.'-'.$survey->id] = s($survey->course).' '.$label;
             }
         }
     }
